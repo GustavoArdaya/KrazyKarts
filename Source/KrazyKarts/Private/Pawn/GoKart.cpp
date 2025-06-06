@@ -27,6 +27,9 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	FVector Translation = Velocity * 100 * DeltaTime;
+	AddActorWorldOffset(Translation);
+
 }
 
 void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -35,16 +38,20 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
+		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::MoveForward);
 		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 	}
 }
 
-void AGoKart::Move(const FInputActionValue& Value)
+void AGoKart::MoveForward(const FInputActionValue& Value)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
-	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-	AddMovementInput(GetActorRightVector(), MovementVector.X);
+	float InputValue = Value.Get<float>(); // Get axis input, e.g., -1.0 to 1.0
+
+	// Optionally clamp or filter input value
+	InputValue = FMath::Clamp(InputValue, -1.0f, 1.0f);
+
+	// Update velocity in the forward direction
+	Velocity = GetActorForwardVector() * InputValue * 20.f;
 }
 
 void AGoKart::Look(const FInputActionValue& Value)

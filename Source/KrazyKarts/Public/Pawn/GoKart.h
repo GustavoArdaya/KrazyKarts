@@ -31,7 +31,7 @@ protected:
 	UInputAction* LookAction;
 
 	UFUNCTION()
-	void Move(const FInputActionValue& Value);
+	void MoveForward(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void Look(const FInputActionValue& Value);
