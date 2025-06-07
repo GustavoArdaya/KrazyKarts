@@ -12,6 +12,8 @@ AGoKart::AGoKart()
 void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MaxSpeed = MaxDrivingForce / Mass * TimeToMaxSpeed;
 	
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
 	{
@@ -21,6 +23,38 @@ void AGoKart::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+}
+
+void AGoKart::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+	FVector Acceleration = Force / Mass;
+
+	Velocity += Acceleration * DeltaTime;
+
+	ApplyRotation(DeltaTime);
+	UpdateLocationFromVelocity(DeltaTime);
+}
+
+void AGoKart::ApplyRotation(float DeltaTime)
+{
+	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	{
+		return;
+	}
+
+	// Estimate max speed based on driving force and mass	
+
+	float SpeedRatio = Velocity.Size() / MaxSpeed;
+	SpeedRatio = FMath::Clamp(SpeedRatio, 0.0f, 1.0f);
+
+	float RotationAngle = MaxDegreesPerSecond * DeltaTime * SteeringThrow * SpeedRatio;
+
+	FQuat RotationDelta(GetActorUpVector(), FMath::DegreesToRadians(RotationAngle));
+	Velocity = RotationDelta.RotateVector(Velocity);
+	AddActorWorldRotation(RotationDelta);
 }
 
 void AGoKart::UpdateLocationFromVelocity(float DeltaTime)
@@ -35,33 +69,34 @@ void AGoKart::UpdateLocationFromVelocity(float DeltaTime)
 	}
 }
 
-void AGoKart::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
-	FVector Acceleration = Force / Mass;
-
-	Velocity += Acceleration * DeltaTime;
-
-	UpdateLocationFromVelocity(DeltaTime);
-}
-
 void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::MoveForward);
+		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Accelerate);
 		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
+		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Triggered, this, &ThisClass::Steer);
+		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Completed, this, &ThisClass::ResetSteering);
 	}
 }
 
-void AGoKart::MoveForward(const FInputActionValue& Value)
+void AGoKart::Accelerate(const FInputActionValue& Value)
 {
 	float InputValue = Value.Get<float>();
 	Throttle = InputValue;
+}
+
+void AGoKart::Steer(const FInputActionValue& Value)
+{
+	float InputValue = Value.Get<float>();
+	SteeringThrow = InputValue;
+}
+
+void AGoKart::ResetSteering(const FInputActionValue& Value)
+{
+	SteeringThrow = 0.0f;
 }
 
 void AGoKart::Look(const FInputActionValue& Value)

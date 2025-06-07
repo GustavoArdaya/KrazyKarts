@@ -31,8 +31,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* LookAction;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* SteerAction;
+
 	UFUNCTION()
-	void MoveForward(const FInputActionValue& Value);
+	void Accelerate(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void Steer(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void ResetSteering(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void Look(const FInputActionValue& Value);
@@ -44,16 +53,27 @@ public:
 private:
 
 	void UpdateLocationFromVelocity(float DeltaTime);
-	
+	void ApplyRotation(float DeltaTime);
+
 	// Mass of car in Kg.
 	UPROPERTY(EditAnywhere)
 	float Mass = 1000;
 
-	// Force applied to car when the throttle is fully down (N)
+	// Force applied to car when the throttle is fully down (N).
 	UPROPERTY(EditAnywhere)
 	float MaxDrivingForce = 10000;
 
+	// Number of degrees rotated per second at full control throw (degrees/s).
+	UPROPERTY(EditAnywhere)
+	float MaxDegreesPerSecond = 90;
+
+	// seconds to reach max speed
+	UPROPERTY(EditAnywhere)
+	float TimeToMaxSpeed = 5.f;
+
 	FVector Velocity;
 	float Throttle;
+	float SteeringThrow;
+	float MaxSpeed;
 
 };
