@@ -30,6 +30,7 @@ void AGoKart::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+	Force += GetResistance();
 	FVector Acceleration = Force / Mass;
 
 	Velocity += Acceleration * DeltaTime;
@@ -44,8 +45,6 @@ void AGoKart::ApplyRotation(float DeltaTime)
 	{
 		return;
 	}
-
-	// Estimate max speed based on driving force and mass	
 
 	float SpeedRatio = Velocity.Size() / MaxSpeed;
 	SpeedRatio = FMath::Clamp(SpeedRatio, 0.0f, 1.0f);
@@ -80,6 +79,16 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Triggered, this, &ThisClass::Steer);
 		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Completed, this, &ThisClass::ResetSteering);
 	}
+}
+
+FVector AGoKart::GetResistance()
+{
+	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	{
+		return FVector::ZeroVector;
+	}
+
+	return -Velocity.GetSafeNormal() * Velocity.SizeSquared() * DragCoefficient;
 }
 
 void AGoKart::Accelerate(const FInputActionValue& Value)
