@@ -18,6 +18,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
 
 	// Input Mapping Context
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -42,6 +43,8 @@ public:
 
 private:
 
+	void UpdateLocationFromVelocity(float DeltaTime);
+	
 	// Mass of car in Kg.
 	UPROPERTY(EditAnywhere)
 	float Mass = 1000;
