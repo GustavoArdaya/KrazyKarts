@@ -29,14 +29,32 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
-	Force += GetResistance();
-	FVector Acceleration = Force / Mass;
+	Throttle = FMath::FInterpTo(Throttle, TargetThrottle, DeltaTime, ThrottleInterpSpeed);
 
+	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+	Force += GetAirResistance();
+	Force += GetRollingResistance();
+
+	FVector Acceleration = Force / Mass;
 	Velocity += Acceleration * DeltaTime;
+
+	/*if (Throttle == 0.f && Velocity.SizeSquared() < 1.0f)
+	{
+		Velocity = FVector::ZeroVector;
+	}*/
 
 	ApplyRotation(DeltaTime);
 	UpdateLocationFromVelocity(DeltaTime);
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			1,                             // Key (unique ID for message)
+			0.0f,                          // Duration (0 = this frame only)
+			FColor::Green,                // Color
+			FString::Printf(TEXT("Velocity: %s (%.1f cm/s)"), *Velocity.ToString(), Velocity.Size())
+		);
+	}
 }
 
 void AGoKart::ApplyRotation(float DeltaTime)
@@ -81,7 +99,7 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	}
 }
 
-FVector AGoKart::GetResistance()
+FVector AGoKart::GetAirResistance()
 {
 	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
 	{
@@ -91,10 +109,23 @@ FVector AGoKart::GetResistance()
 	return -Velocity.GetSafeNormal() * Velocity.SizeSquared() * DragCoefficient;
 }
 
+FVector AGoKart::GetRollingResistance()
+{
+	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	{
+		return FVector::ZeroVector;
+	}
+
+	float NormalForce = Mass * -GetWorld()->GetGravityZ() / 100; // Gravity is already in cm/s²
+	return -Velocity.GetSafeNormal() * RollingResistanceCoefficient * NormalForce;
+}
+
 void AGoKart::Accelerate(const FInputActionValue& Value)
 {
 	float InputValue = Value.Get<float>();
-	Throttle = InputValue;
+
+	// Clamp to forward/backward intent
+	TargetThrottle = FMath::Clamp(InputValue, -1.0f, 1.0f);
 }
 
 void AGoKart::Steer(const FInputActionValue& Value)

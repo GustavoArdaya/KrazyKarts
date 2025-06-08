@@ -52,7 +52,9 @@ public:
 
 private:
 
-	FVector GetResistance();
+	FVector GetAirResistance();
+	FVector GetRollingResistance();
+	
 	void UpdateLocationFromVelocity(float DeltaTime);
 	void ApplyRotation(float DeltaTime);
 
@@ -72,6 +74,10 @@ private:
 	UPROPERTY(EditAnywhere)
 	float DragCoefficient = 16;
 
+	// Directly proportional to Rolling Resistance (Kg/t)
+	UPROPERTY(EditAnywhere)
+	float RollingResistanceCoefficient = 0.02f;
+
 	// seconds to reach max speed
 	UPROPERTY(EditAnywhere)
 	float TimeToMaxSpeed = 5.f;
@@ -80,5 +86,8 @@ private:
 	float Throttle;
 	float SteeringThrow;
 	float MaxSpeed;
+
+	float TargetThrottle = 0.0f;
+	float ThrottleInterpSpeed = 2.0f;
 
 };
