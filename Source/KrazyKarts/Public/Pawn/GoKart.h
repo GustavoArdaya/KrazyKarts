@@ -38,10 +38,13 @@ protected:
 	void Accelerate(const FInputActionValue& Value);
 
 	UFUNCTION()
+	void ResetAcceleration();
+
+	UFUNCTION()
 	void Steer(const FInputActionValue& Value);
 
 	UFUNCTION()
-	void ResetSteering(const FInputActionValue& Value);
+	void ResetSteering();
 
 	UFUNCTION()
 	void Look(const FInputActionValue& Value);
@@ -66,9 +69,13 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MaxDrivingForce = 10000;
 
-	// Number of degrees rotated per second at full control throw (degrees/s).
+	/*// Number of degrees rotated per second at full control throw (degrees/s).
 	UPROPERTY(EditAnywhere)
-	float MaxDegreesPerSecond = 90;
+	float MaxDegreesPerSecond = 90;*/
+
+	// Minimum radius of the car turning circle at full lock (m).
+	UPROPERTY(EditAnywhere)
+	float MinTurningRadius = 2.5f;
 
 	// Directly proportional to Drag (Kg/m)
 	UPROPERTY(EditAnywhere)
@@ -85,9 +92,9 @@ private:
 	FVector Velocity;
 	float Throttle;
 	float SteeringThrow;
-	float MaxSpeed;
+	//float MaxSpeed;
 
-	float TargetThrottle = 0.0f;
-	float ThrottleInterpSpeed = 2.0f;
+	/*float TargetThrottle = 0.0f;
+	float ThrottleInterpSpeed = 2.0f;*/
 
 };

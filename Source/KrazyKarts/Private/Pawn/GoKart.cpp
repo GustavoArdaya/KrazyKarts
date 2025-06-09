@@ -13,7 +13,7 @@ void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MaxSpeed = MaxDrivingForce / Mass * TimeToMaxSpeed;
+	//MaxSpeed = MaxDrivingForce / Mass * TimeToMaxSpeed;
 	
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
 	{
@@ -29,7 +29,7 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	Throttle = FMath::FInterpTo(Throttle, TargetThrottle, DeltaTime, ThrottleInterpSpeed);
+	//Throttle = FMath::FInterpTo(Throttle, TargetThrottle, DeltaTime, ThrottleInterpSpeed);
 
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
 	Force += GetAirResistance();
@@ -54,20 +54,24 @@ void AGoKart::Tick(float DeltaTime)
 			FColor::Green,                // Color
 			FString::Printf(TEXT("Velocity: %s (%.1f cm/s)"), *Velocity.ToString(), Velocity.Size())
 		);
+		GEngine->AddOnScreenDebugMessage(
+			2,                             // Key (unique ID for message)
+			0.0f,                          // Duration (0 = this frame only)
+			FColor::Green,                // Color
+			FString::Printf(TEXT("SteeringThrow: %.1f"), SteeringThrow)
+		);
 	}
 }
 
 void AGoKart::ApplyRotation(float DeltaTime)
 {
-	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	/*if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
 	{
 		return;
-	}
-
-	float SpeedRatio = Velocity.Size() / MaxSpeed;
-	SpeedRatio = FMath::Clamp(SpeedRatio, 0.0f, 1.0f);
-
-	float RotationAngle = MaxDegreesPerSecond * DeltaTime * SteeringThrow * SpeedRatio;
+	}*/
+	float SteeringSensibility = 5.f;
+	float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * DeltaTime;
+	float RotationAngle =  (DeltaLocation / MinTurningRadius) * SteeringThrow * SteeringSensibility;
 
 	FQuat RotationDelta(GetActorUpVector(), FMath::DegreesToRadians(RotationAngle));
 	Velocity = RotationDelta.RotateVector(Velocity);
@@ -93,6 +97,7 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Accelerate);
+		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Completed, this, &ThisClass::ResetAcceleration);
 		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Triggered, this, &ThisClass::Steer);
 		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Completed, this, &ThisClass::ResetSteering);
@@ -101,22 +106,23 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 FVector AGoKart::GetAirResistance()
 {
-	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	/*if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
 	{
 		return FVector::ZeroVector;
-	}
+	}*/
 
 	return -Velocity.GetSafeNormal() * Velocity.SizeSquared() * DragCoefficient;
 }
 
 FVector AGoKart::GetRollingResistance()
 {
-	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	/*if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
 	{
 		return FVector::ZeroVector;
-	}
+	}*/
 
-	float NormalForce = Mass * -GetWorld()->GetGravityZ() / 100; // Gravity is already in cm/s²
+	float AccelerationDueToGravity = -GetWorld()->GetGravityZ() / 100;
+	float NormalForce = Mass * AccelerationDueToGravity; // Gravity is already in cm/s²
 	return -Velocity.GetSafeNormal() * RollingResistanceCoefficient * NormalForce;
 }
 
@@ -125,7 +131,13 @@ void AGoKart::Accelerate(const FInputActionValue& Value)
 	float InputValue = Value.Get<float>();
 
 	// Clamp to forward/backward intent
-	TargetThrottle = FMath::Clamp(InputValue, -1.0f, 1.0f);
+	//TargetThrottle = FMath::Clamp(InputValue, -1.0f, 1.0f);
+	Throttle = InputValue;
+}
+
+void AGoKart::ResetAcceleration()
+{
+	Throttle = 0.f;
 }
 
 void AGoKart::Steer(const FInputActionValue& Value)
@@ -134,7 +146,7 @@ void AGoKart::Steer(const FInputActionValue& Value)
 	SteeringThrow = InputValue;
 }
 
-void AGoKart::ResetSteering(const FInputActionValue& Value)
+void AGoKart::ResetSteering()
 {
 	SteeringThrow = 0.0f;
 }
