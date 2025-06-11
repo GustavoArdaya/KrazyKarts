@@ -3,3 +3,4 @@
 
 #include "KrazyKartsGameModeBase.h"
 
+#include "Pawn/GoKart.h"

@@ -13,5 +13,4 @@ UCLASS()
 class KRAZYKARTS_API AKrazyKartsGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
 };

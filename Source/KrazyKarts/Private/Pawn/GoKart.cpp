@@ -2,7 +2,6 @@
 
 
 #include "Pawn/GoKart.h"
-
 #include "Net/UnrealNetwork.h"
 
 AGoKart::AGoKart()
@@ -14,8 +13,11 @@ AGoKart::AGoKart()
 void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	SetReplicateMovement(true);
+
+	if (HasAuthority())
+	{
+		SetReplicateMovement(true);		
+	}
 	
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
 	{
@@ -46,49 +48,39 @@ FString GetEnumText(ENetRole Role)
 	}
 }
 
-/*void AGoKart::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AGoKart::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AGoKart, Velocity);
-	DOREPLIFETIME(AGoKart, Throttle);
-	DOREPLIFETIME(AGoKart, SteeringThrow);
-}*/
+	DOREPLIFETIME(AGoKart, ReplicatedLocation);
+	DOREPLIFETIME(AGoKart, ReplicatedRotation);
+}
 
 void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
-	Force += GetAirResistance();
-	Force += GetRollingResistance();
-
-	FVector Acceleration = Force / Mass;
-	Velocity += Acceleration * DeltaTime;
-
-	/*if (Throttle == 0.f && Velocity.SizeSquared() < 1.0f)
+	if (HasAuthority() || IsLocallyControlled())
 	{
-		Velocity = FVector::ZeroVector;
-	}*/
+		FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+		Force += GetAirResistance();
+		Force += GetRollingResistance();
 
-	ApplyRotation(DeltaTime);
-	UpdateLocationFromVelocity(DeltaTime);
+		FVector Acceleration = Force / Mass;
+		Velocity += Acceleration * DeltaTime;
 
-	/*if (GEngine)
+		ApplyRotation(DeltaTime);
+		UpdateLocationFromVelocity(DeltaTime);
+
+		ReplicatedLocation = GetActorLocation();
+		ReplicatedRotation = GetActorRotation();
+	}
+	else
 	{
-		GEngine->AddOnScreenDebugMessage(
-			1,                             // Key (unique ID for message)
-			0.0f,                          // Duration (0 = this frame only)
-			FColor::Green,                // Color
-			FString::Printf(TEXT("Velocity: %s (%.1f cm/s)"), *Velocity.ToString(), Velocity.Size())
-		);
-		GEngine->AddOnScreenDebugMessage(
-			2,                             // Key (unique ID for message)
-			0.0f,                          // Duration (0 = this frame only)
-			FColor::Green,                // Color
-			FString::Printf(TEXT("SteeringThrow: %.1f"), SteeringThrow)
-		);
-	}*/
+		SetActorLocation(ReplicatedLocation);
+		SetActorRotation(ReplicatedRotation);
+	}
+	
 	DrawDebugString(GetWorld(), FVector(0.f,0.f,100.f), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
 	
 }
@@ -164,18 +156,21 @@ void AGoKart::Accelerate(const FInputActionValue& Value)
 {
 	float InputValue = Value.Get<float>();
 	Throttle = InputValue;
-	Server_Accelerate(Value);
+	Server_Accelerate(InputValue);
 }
 
-void AGoKart::Server_Accelerate_Implementation(const FInputActionValue& Value)
+void AGoKart::Server_Accelerate_Implementation(float Value)
 {
-	float InputValue = Value.Get<float>();
-	Throttle = InputValue;
+	//float InputValue = Value.Get<float>();
+	UE_LOG(LogTemp, Warning, TEXT("Server received throttle: %f"), Value);
+	//Throttle = InputValue;
+	Throttle = Value;
 }
 
-bool AGoKart::Server_Accelerate_Validate(const FInputActionValue& Value)
+bool AGoKart::Server_Accelerate_Validate(float Value)
 {
-	return FMath::Abs(Value.Get<float>()) <= 1.f;
+	//return FMath::Abs(Value) <= 1.f;
+	return true;
 }
 
 void AGoKart::ResetAcceleration()
@@ -191,26 +186,29 @@ void AGoKart::Server_ResetAcceleration_Implementation()
 
 bool AGoKart::Server_ResetAcceleration_Validate()
 {
-	return Throttle == 0.f;
+	//return Throttle == 0.f;
+	return true;
 }
 
 void AGoKart::Steer(const FInputActionValue& Value)
 {
 	float InputValue = Value.Get<float>();
 	SteeringThrow = InputValue;
-	Server_Steer(Value);
+	Server_Steer(InputValue);
 }
 
 
-void AGoKart::Server_Steer_Implementation(const FInputActionValue& Value)
+void AGoKart::Server_Steer_Implementation(float Value)
 {
-	float InputValue = Value.Get<float>();
-	SteeringThrow = InputValue;
+	//float InputValue = Value.Get<float>();
+	//SteeringThrow = InputValue;
+	SteeringThrow = Value;
 }
 
-bool AGoKart::Server_Steer_Validate(const FInputActionValue& Value)
+bool AGoKart::Server_Steer_Validate(float Value)
 {
-	return FMath::Abs(Value.Get<float>()) <= 1.f;
+	//return FMath::Abs(Value) <= 1.f;
+	return true;
 }
 
 void AGoKart::ResetSteering()
@@ -226,7 +224,8 @@ void AGoKart::Server_ResetSteering_Implementation()
 
 bool AGoKart::Server_ResetSteering_Validate()
 {
-	return SteeringThrow == 0.0f;
+	//return SteeringThrow == 0.0f;
+	return true;
 }
 
 void AGoKart::Look(const FInputActionValue& Value)
