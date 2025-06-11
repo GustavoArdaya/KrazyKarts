@@ -18,7 +18,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
+
+	//void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// Input Mapping Context
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -34,16 +35,27 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SteerAction;
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Accelerate(const FInputActionValue& Value);
+
 	UFUNCTION()
 	void Accelerate(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ResetAcceleration();
 
 	UFUNCTION()
 	void ResetAcceleration();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Steer(const FInputActionValue& Value);
+
 	UFUNCTION()
 	void Steer(const FInputActionValue& Value);
 
-	UFUNCTION()
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ResetSteering();
+
 	void ResetSteering();
 
 	UFUNCTION()
@@ -89,12 +101,20 @@ private:
 	UPROPERTY(EditAnywhere)
 	float TimeToMaxSpeed = 5.f;
 
+	UPROPERTY(/*Replicated*/)
 	FVector Velocity;
+	
+	UPROPERTY(/*Replicated*/)
 	float Throttle;
+
+	UPROPERTY(/*Replicated*/)
 	float SteeringThrow;
 	//float MaxSpeed;
 
 	/*float TargetThrottle = 0.0f;
 	float ThrottleInterpSpeed = 2.0f;*/
+
+	/*UFUNCTION()
+	void OnRep_Throttle();*/
 
 };
