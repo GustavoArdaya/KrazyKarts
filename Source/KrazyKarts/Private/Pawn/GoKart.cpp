@@ -52,8 +52,7 @@ void AGoKart::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AGoKart, ReplicatedLocation);
-	DOREPLIFETIME(AGoKart, ReplicatedRotation);
+	DOREPLIFETIME(AGoKart, ReplicatedTransform);
 }
 
 void AGoKart::Tick(float DeltaTime)
@@ -72,13 +71,7 @@ void AGoKart::Tick(float DeltaTime)
 		ApplyRotation(DeltaTime);
 		UpdateLocationFromVelocity(DeltaTime);
 
-		ReplicatedLocation = GetActorLocation();
-		ReplicatedRotation = GetActorRotation();
-	}
-	else
-	{
-		SetActorLocation(ReplicatedLocation);
-		SetActorRotation(ReplicatedRotation);
+		ReplicatedTransform = GetActorTransform();
 	}
 	
 	DrawDebugString(GetWorld(), FVector(0.f,0.f,100.f), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
@@ -100,9 +93,10 @@ void AGoKart::ApplyRotation(float DeltaTime)
 	AddActorWorldRotation(RotationDelta);
 }
 
-/*void AGoKart::OnRep_Throttle()
+void AGoKart::OnRep_ReplicatedTransform()
 {
-}*/
+	SetActorTransform(ReplicatedTransform);
+}
 
 void AGoKart::UpdateLocationFromVelocity(float DeltaTime)
 {
@@ -122,9 +116,8 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Accelerate);
-		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Completed, this, &ThisClass::ResetAcceleration);
-		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
+		EnhancedInput->BindAction(AccelerateAction, ETriggerEvent::Triggered, this, &ThisClass::Accelerate);
+		EnhancedInput->BindAction(AccelerateAction, ETriggerEvent::Completed, this, &ThisClass::ResetAcceleration);
 		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Triggered, this, &ThisClass::Steer);
 		EnhancedInput->BindAction(SteerAction, ETriggerEvent::Completed, this, &ThisClass::ResetSteering);
 	}
@@ -161,15 +154,11 @@ void AGoKart::Accelerate(const FInputActionValue& Value)
 
 void AGoKart::Server_Accelerate_Implementation(float Value)
 {
-	//float InputValue = Value.Get<float>();
-	UE_LOG(LogTemp, Warning, TEXT("Server received throttle: %f"), Value);
-	//Throttle = InputValue;
 	Throttle = Value;
 }
 
 bool AGoKart::Server_Accelerate_Validate(float Value)
 {
-	//return FMath::Abs(Value) <= 1.f;
 	return true;
 }
 
@@ -186,7 +175,6 @@ void AGoKart::Server_ResetAcceleration_Implementation()
 
 bool AGoKart::Server_ResetAcceleration_Validate()
 {
-	//return Throttle == 0.f;
 	return true;
 }
 
@@ -224,14 +212,6 @@ void AGoKart::Server_ResetSteering_Implementation()
 
 bool AGoKart::Server_ResetSteering_Validate()
 {
-	//return SteeringThrow == 0.0f;
 	return true;
-}
-
-void AGoKart::Look(const FInputActionValue& Value)
-{
-	FVector2D LookVector = Value.Get<FVector2D>();
-	AddControllerYawInput(LookVector.X);
-	AddControllerPitchInput(LookVector.Y);
 }
 

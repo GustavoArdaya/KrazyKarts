@@ -27,10 +27,7 @@ protected:
 
 	// Input Actions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* MoveAction;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* LookAction;
+	UInputAction* AccelerateAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SteerAction;
@@ -57,9 +54,6 @@ protected:
 	void Server_ResetSteering();
 
 	void ResetSteering();
-
-	UFUNCTION()
-	void Look(const FInputActionValue& Value);
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -109,10 +103,10 @@ private:
 	void OnRep_Throttle();*/
 
 	// Replicated properties
-	UPROPERTY(Replicated)
-	FVector ReplicatedLocation;
-
-	UPROPERTY(Replicated)
-	FRotator ReplicatedRotation;
+	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
+	FTransform ReplicatedTransform;
+	
+	UFUNCTION()
+	void OnRep_ReplicatedTransform();
 
 };
