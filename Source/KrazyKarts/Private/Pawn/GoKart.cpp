@@ -53,6 +53,9 @@ void AGoKart::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AGoKart, ReplicatedTransform);
+	DOREPLIFETIME(AGoKart, Velocity);
+	DOREPLIFETIME(AGoKart, Throttle);
+	DOREPLIFETIME(AGoKart, SteeringThrow);
 }
 
 void AGoKart::Tick(float DeltaTime)
@@ -75,18 +78,37 @@ void AGoKart::Tick(float DeltaTime)
 	}
 	
 	DrawDebugString(GetWorld(), FVector(0.f,0.f,100.f), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::Cyan, FString::Printf(TEXT("Velocity: %.2f"), Velocity.Size()));
+
+	}
 	
 }
 
 void AGoKart::ApplyRotation(float DeltaTime)
 {
-	/*if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
+	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
 	{
 		return;
-	}*/
-	float SteeringSensibility = 5.f;
+	}
+
+	float Speed = Velocity.Size(); // Magnitude of the velocity vector
+	float MinSpeed = 0.f;
+	float MaxSpeed = 25.f; // Adjust based on your expected top speed
+
+	float MaxSensitivity = 10.f; // High sensitivity at low speed
+	float MinSensitivity = 4.f; // Low sensitivity at high speed
+
+	float SteeringSensitivity = FMath::GetMappedRangeValueClamped(
+		FVector2D(MinSpeed, MaxSpeed),
+		FVector2D(MaxSensitivity, MinSensitivity),
+		Speed
+	);
+
 	float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * DeltaTime;
-	float RotationAngle =  (DeltaLocation / MinTurningRadius) * SteeringThrow * SteeringSensibility;
+	float RotationAngle = (DeltaLocation / MinTurningRadius) * SteeringThrow * SteeringSensitivity;
 
 	FQuat RotationDelta(GetActorUpVector(), FMath::DegreesToRadians(RotationAngle));
 	Velocity = RotationDelta.RotateVector(Velocity);

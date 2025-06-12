@@ -81,7 +81,7 @@ private:
 
 	// Minimum radius of the car turning circle at full lock (m).
 	UPROPERTY(EditAnywhere)
-	float MinTurningRadius = 2.5f;
+	float MinTurningRadius = 2.f;
 
 	// Directly proportional to Drag (Kg/m)
 	UPROPERTY(EditAnywhere)
@@ -95,8 +95,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	float TimeToMaxSpeed = 5.f;
 
+	UPROPERTY(Replicated)
 	FVector Velocity;
+	UPROPERTY(Replicated)
 	float Throttle;
+	UPROPERTY(Replicated)
 	float SteeringThrow;
 
 	/*UFUNCTION()
