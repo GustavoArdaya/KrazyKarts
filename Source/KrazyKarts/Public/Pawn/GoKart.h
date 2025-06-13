@@ -100,6 +100,9 @@ public:
 private:
 
 	void SimulateMove(FGoKartMove Move);
+	void ClearAcknowledgedMoves(FGoKartMove LastMove);
+
+	FGoKartMove CreateMove(float DeltaTime);
 
 	FVector GetAirResistance();
 	FVector GetRollingResistance();
@@ -114,10 +117,6 @@ private:
 	// Force applied to car when the throttle is fully down (N).
 	UPROPERTY(EditAnywhere)
 	float MaxDrivingForce = 10000;
-
-	/*// Number of degrees rotated per second at full control throw (degrees/s).
-	UPROPERTY(EditAnywhere)
-	float MaxDegreesPerSecond = 90;*/
 
 	// Minimum radius of the car turning circle at full lock (m).
 	UPROPERTY(EditAnywhere)
@@ -141,16 +140,12 @@ private:
 	//UPROPERTY(Replicated)
 	FVector Velocity;
 
-	/*UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
-	FTransform ReplicatedTransform;*/
-
 	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
 	FGoKartState ServerState;	
-	
-	/*UFUNCTION()
-	void OnRep_ReplicatedTransform();*/
 
 	UFUNCTION()
 	void OnRep_ServerState();
+
+	TArray<FGoKartMove> UnacknowledgedMoves;
 
 };
