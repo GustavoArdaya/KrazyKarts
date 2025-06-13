@@ -60,23 +60,24 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (IsLocallyControlled())
+	if (GetLocalRole() == ROLE_AutonomousProxy)
 	{
 		FGoKartMove Move = CreateMove(DeltaTime);
-		if (!HasAuthority())
-		{
-			UnacknowledgedMoves.Add(Move);
-		}
-
-		Server_SendMove(Move);
 		SimulateMove(Move);
+		UnacknowledgedMoves.Add(Move);
+		Server_SendMove(Move);	
 	}
-	
-	if (GEngine)
+
+	// Server and in control of the pawn
+	if (GetLocalRole() == ROLE_Authority && IsLocallyControlled())
 	{
-		const FString RoleText = GetEnumText(GetLocalRole());
-		const FString VelocityText = FString::Printf(TEXT("Velocity (Role: %s): %.2f"), *RoleText, Velocity.Size());
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::Cyan, VelocityText);
+		FGoKartMove Move = CreateMove(DeltaTime);
+		Server_SendMove(Move);	
+	}
+
+	if (GetLocalRole() == ROLE_SimulatedProxy)
+	{
+		SimulateMove(ServerState.LastMove);
 	}
 	
 	DrawDebugString(GetWorld(), FVector(0.f,0.f,100.f), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);	

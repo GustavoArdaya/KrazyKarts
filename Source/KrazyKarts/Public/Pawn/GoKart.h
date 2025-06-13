@@ -123,6 +123,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MinTurningRadius = 2.f;
 
+	UPROPERTY(EditAnywhere)
+	float MinSteeringSensitivity = 4.f;
+
+	UPROPERTY(EditAnywhere)
+	float MaxSteeringSensitivity = 10.f;
+
 	// Directly proportional to Drag (Kg/m)
 	UPROPERTY(EditAnywhere)
 	float DragCoefficient = 16;
@@ -135,11 +141,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float TimeToMaxSpeed = 5.f;
 
-	UPROPERTY(EditAnywhere)
-	float MinSteeringSensitivity = 4.f;
-
-	UPROPERTY(EditAnywhere)
-	float MaxSteeringSensitivity = 10.f;
+	
 
 	float Throttle;
 	float SteeringThrow;
