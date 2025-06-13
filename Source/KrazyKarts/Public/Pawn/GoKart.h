@@ -101,6 +101,7 @@ private:
 
 	void SimulateMove(const FGoKartMove& Move);
 	void ClearAcknowledgedMoves(FGoKartMove LastMove);
+	float GetSteeringSensitivity();
 
 	FGoKartMove CreateMove(float DeltaTime);
 
@@ -133,6 +134,12 @@ private:
 	// seconds to reach max speed
 	UPROPERTY(EditAnywhere)
 	float TimeToMaxSpeed = 5.f;
+
+	UPROPERTY(EditAnywhere)
+	float MinSteeringSensitivity = 4.f;
+
+	UPROPERTY(EditAnywhere)
+	float MaxSteeringSensitivity = 10.f;
 
 	float Throttle;
 	float SteeringThrow;

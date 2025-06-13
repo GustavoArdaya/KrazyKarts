@@ -88,20 +88,9 @@ void AGoKart::ApplyRotation(float InDeltaTime, float InSteeringThrow)
 	if (Velocity.SizeSquared() < KINDA_SMALL_NUMBER)
 	{
 		return;
-	}
+	}	
 
-	float Speed = Velocity.Size(); // Magnitude of the velocity vector
-	float MinSpeed = 0.f;
-	float MaxSpeed = 25.f; // Adjust based on your expected top speed
-
-	float MaxSensitivity = 10.f; // High sensitivity at low speed
-	float MinSensitivity = 4.f; // Low sensitivity at high speed
-
-	float SteeringSensitivity = FMath::GetMappedRangeValueClamped(
-		FVector2D(MinSpeed, MaxSpeed),
-		FVector2D(MaxSensitivity, MinSensitivity),
-		Speed
-	);
+	float SteeringSensitivity = GetSteeringSensitivity();
 
 	float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * InDeltaTime;
 	float RotationAngle = (DeltaLocation / MinTurningRadius) * InSteeringThrow * SteeringSensitivity;
@@ -191,6 +180,21 @@ void AGoKart::ClearAcknowledgedMoves(FGoKartMove LastMove)
 		}
 	}	
 	UnacknowledgedMoves = NewMoves;
+}
+
+float AGoKart::GetSteeringSensitivity()
+{
+	const float Gravity = FMath::Abs(GetWorld()->GetGravityZ());
+	float RollingResistance = RollingResistanceCoefficient * Mass * Gravity;
+	float MaxSpeedEstimate = FMath::Sqrt((MaxDrivingForce - RollingResistance) / DragCoefficient); // m/s
+	float Speed = Velocity.Size();
+	MaxSpeedEstimate = FMath::Max(MaxSpeedEstimate, 1.f);
+
+	return FMath::GetMappedRangeValueClamped(
+		FVector2D(0.f, MaxSpeedEstimate),
+		FVector2D(MaxSteeringSensitivity, MinSteeringSensitivity),
+		Speed
+	);
 }
 
 FVector AGoKart::GetAirResistance()
