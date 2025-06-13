@@ -36,7 +36,7 @@ struct FGoKartState
 	FTransform Transform;
 	
 	UPROPERTY()
-	float Velocity;
+	FVector Velocity;
 	
 	UPROPERTY()
 	FGoKartMove LastMove;	
@@ -67,8 +67,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* SteerAction;
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Accelerate(float Value);
+	/*UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Accelerate(float Value);*/
+
+	UFUNCTION(Server, Reliable,WithValidation)
+	void Server_SendMove(FGoKartMove Move);
 
 	UFUNCTION()
 	void Accelerate(const FInputActionValue& Value);
@@ -79,8 +82,8 @@ protected:
 	UFUNCTION()
 	void ResetAcceleration();
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Steer(float Value);
+	/*UFUNCTION(Server, Reliable, WithValidation)
+	void Server_Steer(float Value);*/
 
 	UFUNCTION()
 	void Steer(const FInputActionValue& Value);
@@ -96,11 +99,13 @@ public:
 
 private:
 
+	void SimulateMove(FGoKartMove Move);
+
 	FVector GetAirResistance();
 	FVector GetRollingResistance();
 	
 	void UpdateLocationFromVelocity(float DeltaTime);
-	void ApplyRotation(float DeltaTime);
+	void ApplyRotation(float InDeltaTime, float InSteeringThrow);
 
 	// Mass of car in Kg.
 	UPROPERTY(EditAnywhere)
@@ -130,21 +135,22 @@ private:
 	UPROPERTY(EditAnywhere)
 	float TimeToMaxSpeed = 5.f;
 
-	UPROPERTY(Replicated)
-	FVector Velocity;
-	UPROPERTY(Replicated)
 	float Throttle;
-	UPROPERTY(Replicated)
 	float SteeringThrow;
-
-	/*UFUNCTION()
-	void OnRep_Throttle();*/
-
-	// Replicated properties
-	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
-	FTransform ReplicatedTransform;
 	
+	//UPROPERTY(Replicated)
+	FVector Velocity;
+
+	/*UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTransform)
+	FTransform ReplicatedTransform;*/
+
+	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
+	FGoKartState ServerState;	
+	
+	/*UFUNCTION()
+	void OnRep_ReplicatedTransform();*/
+
 	UFUNCTION()
-	void OnRep_ReplicatedTransform();
+	void OnRep_ServerState();
 
 };
