@@ -8,6 +8,41 @@
 #include "EnhancedInputSubsystems.h"
 #include "GoKart.generated.h"
 
+USTRUCT()
+struct FGoKartMove
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float Throttle;
+
+	UPROPERTY()
+	float SteeringThrow;
+
+	UPROPERTY()
+	float DeltaTime;
+
+	UPROPERTY()
+	float TimeStamp;
+	
+};
+
+USTRUCT()
+struct FGoKartState
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FTransform Transform;
+	
+	UPROPERTY()
+	float Velocity;
+	
+	UPROPERTY()
+	FGoKartMove LastMove;	
+};
+
+
 UCLASS()
 class KRAZYKARTS_API AGoKart : public APawn
 {

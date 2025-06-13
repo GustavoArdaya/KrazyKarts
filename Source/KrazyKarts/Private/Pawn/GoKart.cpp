@@ -75,15 +75,15 @@ void AGoKart::Tick(float DeltaTime)
 		UpdateLocationFromVelocity(DeltaTime);
 
 		ReplicatedTransform = GetActorTransform();
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(1, 3, FColor::Cyan, FString::Printf(TEXT("Velocity: %.2f"), Velocity.Size()));
+
+		}
 	}
 	
-	DrawDebugString(GetWorld(), FVector(0.f,0.f,100.f), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::Cyan, FString::Printf(TEXT("Velocity: %.2f"), Velocity.Size()));
-
-	}
+	DrawDebugString(GetWorld(), FVector(0.f,0.f,100.f), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);	
 	
 }
 
