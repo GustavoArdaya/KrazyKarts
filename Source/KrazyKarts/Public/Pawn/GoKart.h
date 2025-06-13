@@ -99,7 +99,7 @@ public:
 
 private:
 
-	void SimulateMove(FGoKartMove Move);
+	void SimulateMove(const FGoKartMove& Move);
 	void ClearAcknowledgedMoves(FGoKartMove LastMove);
 
 	FGoKartMove CreateMove(float DeltaTime);

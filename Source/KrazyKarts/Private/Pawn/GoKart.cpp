@@ -3,6 +3,7 @@
 
 #include "Pawn/GoKart.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/GameStateBase.h"
 
 AGoKart::AGoKart()
 {
@@ -65,7 +66,6 @@ void AGoKart::Tick(float DeltaTime)
 		if (!HasAuthority())
 		{
 			UnacknowledgedMoves.Add(Move);
-			UE_LOG(LogTemp, Display, TEXT("Queue length: %d"), UnacknowledgedMoves.Num());
 		}
 
 		Server_SendMove(Move);
@@ -74,8 +74,10 @@ void AGoKart::Tick(float DeltaTime)
 	
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(1, 3, FColor::Cyan, FString::Printf(TEXT("Velocity: %.2f"), Velocity.Size()));
-	}	
+		const FString RoleText = GetEnumText(GetLocalRole());
+		const FString VelocityText = FString::Printf(TEXT("Velocity (Role: %s): %.2f"), *RoleText, Velocity.Size());
+		GEngine->AddOnScreenDebugMessage(1, 3, FColor::Cyan, VelocityText);
+	}
 	
 	DrawDebugString(GetWorld(), FVector(0.f,0.f,100.f), GetEnumText(GetLocalRole()), this, FColor::White, DeltaTime);	
 	
@@ -114,6 +116,11 @@ void AGoKart::OnRep_ServerState()
 	SetActorTransform(ServerState.Transform);
 	Velocity = ServerState.Velocity;
 	ClearAcknowledgedMoves(ServerState.LastMove);
+
+	for (const FGoKartMove& Move : UnacknowledgedMoves)
+	{
+		SimulateMove(Move);
+	}
 }
 
 void AGoKart::UpdateLocationFromVelocity(float DeltaTime)
@@ -141,7 +148,7 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	}
 }
 
-void AGoKart::SimulateMove(FGoKartMove Move)
+void AGoKart::SimulateMove(const FGoKartMove& Move)
 {
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Move.Throttle;
 	Force += GetAirResistance();
@@ -158,7 +165,17 @@ FGoKartMove AGoKart::CreateMove(float DeltaTime)
 	Move.DeltaTime = DeltaTime;
 	Move.SteeringThrow = SteeringThrow;
 	Move.Throttle = Throttle;
-	Move.TimeStamp = GetWorld()->TimeSeconds;
+
+	AGameStateBase* GameState = GetWorld()->GetGameState<AGameStateBase>();
+	if (GameState)
+	{
+		Move.TimeStamp = GameState->GetServerWorldTimeSeconds();
+	}
+	else
+	{
+		Move.TimeStamp = GetWorld()->TimeSeconds;
+	}
+
 	return Move;
 }
 
