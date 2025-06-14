@@ -20,6 +20,13 @@ void UGoKartMovementComponent::BeginPlay()
 void UGoKartMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	bool bIsLocallyControlled = Cast<APawn>(GetOwner())->IsLocallyControlled();
+	if (GetOwnerRole() == ROLE_AutonomousProxy || bIsLocallyControlled)
+	{
+		LastMove = CreateMove(DeltaTime);
+		SimulateMove(LastMove);
+	}	
 }
 
 void UGoKartMovementComponent::ApplyRotation(float InDeltaTime, float InSteeringThrow)
