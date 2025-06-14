@@ -6,26 +6,10 @@
 #include "GameFramework/Pawn.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/GoKartMovementComponent.h"
 #include "GoKart.generated.h"
 
-USTRUCT()
-struct FGoKartMove
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	float Throttle;
-
-	UPROPERTY()
-	float SteeringThrow;
-
-	UPROPERTY()
-	float DeltaTime;
-
-	UPROPERTY()
-	float TimeStamp;
-	
-};
+class UGoKartMovementComponent;
 
 USTRUCT()
 struct FGoKartState
@@ -56,6 +40,9 @@ protected:
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	UGoKartMovementComponent* MovementComponent;
+	
 	// Input Mapping Context
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputMappingContext* DefaultMappingContext;
@@ -99,55 +86,8 @@ public:
 
 private:
 
-	void SimulateMove(const FGoKartMove& Move);
-	void ClearAcknowledgedMoves(FGoKartMove LastMove);
-	float GetSteeringSensitivity();
-
-	FGoKartMove CreateMove(float DeltaTime);
-
-	FVector GetAirResistance();
-	FVector GetRollingResistance();
 	
-	void UpdateLocationFromVelocity(float DeltaTime);
-	void ApplyRotation(float InDeltaTime, float InSteeringThrow);
-
-	// Mass of car in Kg.
-	UPROPERTY(EditAnywhere)
-	float Mass = 1000;
-
-	// Force applied to car when the throttle is fully down (N).
-	UPROPERTY(EditAnywhere)
-	float MaxDrivingForce = 10000;
-
-	// Minimum radius of the car turning circle at full lock (m).
-	UPROPERTY(EditAnywhere)
-	float MinTurningRadius = 2.f;
-
-	UPROPERTY(EditAnywhere)
-	float MinSteeringSensitivity = 4.f;
-
-	UPROPERTY(EditAnywhere)
-	float MaxSteeringSensitivity = 10.f;
-
-	// Directly proportional to Drag (Kg/m)
-	UPROPERTY(EditAnywhere)
-	float DragCoefficient = 16;
-
-	// Directly proportional to Rolling Resistance (Kg/t)
-	UPROPERTY(EditAnywhere)
-	float RollingResistanceCoefficient = 0.02f;
-
-	// seconds to reach max speed
-	UPROPERTY(EditAnywhere)
-	float TimeToMaxSpeed = 5.f;
-
-	
-
-	float Throttle;
-	float SteeringThrow;
-	
-	//UPROPERTY(Replicated)
-	FVector Velocity;
+	void ClearAcknowledgedMoves(FGoKartMove LastMove);	
 
 	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
 	FGoKartState ServerState;	
