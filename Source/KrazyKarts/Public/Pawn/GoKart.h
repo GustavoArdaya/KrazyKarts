@@ -9,22 +9,10 @@
 #include "Components/GoKartMovementComponent.h"
 #include "GoKart.generated.h"
 
+class UGoKartMovementReplicator;
 class UGoKartMovementComponent;
 
-USTRUCT()
-struct FGoKartState
-{
-	GENERATED_BODY()
 
-	UPROPERTY()
-	FTransform Transform;
-	
-	UPROPERTY()
-	FVector Velocity;
-	
-	UPROPERTY()
-	FGoKartMove LastMove;	
-};
 
 
 UCLASS()
@@ -35,13 +23,16 @@ class KRAZYKARTS_API AGoKart : public APawn
 public:
 	AGoKart();
 
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	UGoKartMovementComponent* MovementComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Replication")
+	UGoKartMovementReplicator* MovementReplicator;
+
 protected:
 	virtual void BeginPlay() override;
 
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	UPROPERTY(EditAnywhere, Category = "Movement")
-	UGoKartMovementComponent* MovementComponent;
+	//void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;	
 	
 	// Input Mapping Context
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -57,8 +48,7 @@ protected:
 	/*UFUNCTION(Server, Reliable, WithValidation)
 	void Server_Accelerate(float Value);*/
 
-	UFUNCTION(Server, Reliable,WithValidation)
-	void Server_SendMove(FGoKartMove Move);
+	
 
 	UFUNCTION()
 	void Accelerate(const FInputActionValue& Value);
@@ -84,17 +74,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-private:
-
-	
-	void ClearAcknowledgedMoves(FGoKartMove LastMove);	
-
-	UPROPERTY(ReplicatedUsing = OnRep_ServerState)
-	FGoKartState ServerState;	
-
-	UFUNCTION()
-	void OnRep_ServerState();
-
-	TArray<FGoKartMove> UnacknowledgedMoves;
 
 };
