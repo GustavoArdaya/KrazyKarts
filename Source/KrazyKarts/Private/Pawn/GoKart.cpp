@@ -2,10 +2,9 @@
 
 
 #include "Pawn/GoKart.h"
-
+#include "EnhancedInputComponent.h"
 #include "Components/GoKartMovementComponent.h"
 #include "Components/GoKartMovementReplicator.h"
-#include "Net/UnrealNetwork.h"
 
 AGoKart::AGoKart()
 {
@@ -54,13 +53,6 @@ FString GetEnumText(ENetRole Role)
 		return "Unknown";
 	}
 }
-
-/*void AGoKart::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
-	
-}*/
 
 void AGoKart::Tick(float DeltaTime)
 {

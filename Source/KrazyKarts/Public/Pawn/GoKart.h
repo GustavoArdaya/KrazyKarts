@@ -4,16 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Components/GoKartMovementComponent.h"
 #include "GoKart.generated.h"
 
 class UGoKartMovementReplicator;
 class UGoKartMovementComponent;
-
-
-
 
 UCLASS()
 class KRAZYKARTS_API AGoKart : public APawn
@@ -31,8 +27,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	//void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;	
 	
 	// Input Mapping Context
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -43,12 +37,7 @@ protected:
 	UInputAction* AccelerateAction;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputAction* SteerAction;
-
-	/*UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Accelerate(float Value);*/
-
-	
+	UInputAction* SteerAction;	
 
 	UFUNCTION()
 	void Accelerate(const FInputActionValue& Value);
@@ -58,9 +47,6 @@ protected:
 
 	UFUNCTION()
 	void ResetAcceleration();
-
-	/*UFUNCTION(Server, Reliable, WithValidation)
-	void Server_Steer(float Value);*/
 
 	UFUNCTION()
 	void Steer(const FInputActionValue& Value);

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GoKartMovementComponent.h"
-#include "NetworkReplayStreaming.h"
 #include "Components/ActorComponent.h"
 #include "GoKartMovementReplicator.generated.h"
 
@@ -54,5 +53,7 @@ private:
 	void OnRep_ServerState();
 
 	TArray<FGoKartMove> UnacknowledgedMoves;
+
+	UGoKartMovementComponent* MovementComponent;
 		
 };
