@@ -39,7 +39,7 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void SimulateMove(const FGoKartMove& Move);
-	FGoKartMove CreateMove(float DeltaTime);
+	
 
 	FORCEINLINE FGoKartMove GetLastMove() const { return LastMove; }
 	FORCEINLINE FVector GetVelocity() const { return Velocity; }
@@ -51,8 +51,8 @@ public:
 	FORCEINLINE void SetSteeringThrow(float NewThrow) { SteeringThrow = NewThrow; }
 
 private:
-
-
+	
+	FGoKartMove CreateMove(float DeltaTime);
 	float GetSteeringSensitivity();
 	FVector GetAirResistance();
 	FVector GetRollingResistance();
