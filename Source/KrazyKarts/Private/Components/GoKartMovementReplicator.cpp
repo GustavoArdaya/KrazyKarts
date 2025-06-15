@@ -93,9 +93,20 @@ void UGoKartMovementReplicator::AutonomousProxy_OnRep_ServerState()
 
 void UGoKartMovementReplicator::SimulatedProxy_OnRep_ServerState()
 {
+	if (!MovementComponent)
+	{
+		MovementComponent = GetOwner()->FindComponentByClass<UGoKartMovementComponent>();
+		if (!MovementComponent)
+		{
+			UE_LOG(LogTemp, Error, TEXT("MovementComponent is null in OnRep_ServerState"));
+			return;
+		}
+	}
+	
 	ClientTimeBetweenLastUpdates = ClientTimeSinceUpdate;
 	ClientTimeSinceUpdate = 0;
 	ClientStartTransform = GetOwner()->GetActorTransform();
+	ClientStartVelocity = MovementComponent->GetVelocity();
 }
 
 void UGoKartMovementReplicator::ClearAcknowledgedMoves(FGoKartMove LastMove)
@@ -122,15 +133,22 @@ void UGoKartMovementReplicator::UpdateServerState(const FGoKartMove& Move)
 void UGoKartMovementReplicator::ClientTick(float DeltaTime)
 {
 	ClientTimeSinceUpdate += DeltaTime;
-	if (ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER) return;
+	if (ClientTimeBetweenLastUpdates < KINDA_SMALL_NUMBER || !MovementComponent) return;
 
 	float LerpRatio = ClientTimeSinceUpdate / ClientTimeBetweenLastUpdates;
 	FVector TargetLocation = ServerState.Transform.GetLocation();
 	FVector StartLocation = ClientStartTransform.GetLocation();
-
-	FVector NewLocation = FMath::LerpStable(StartLocation, TargetLocation, LerpRatio);
+	FVector StartDerivative = ClientStartVelocity;
+	float VelocityToDerivative = ClientTimeBetweenLastUpdates * 100;
+	FVector TargetDerivative = ServerState.Velocity * VelocityToDerivative; // Vel is m/s but loc is in cm
+	
+	FVector NewLocation = FMath::CubicInterp(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
 	GetOwner()->SetActorLocation(NewLocation);
 
+	FVector NewDerivative = FMath::CubicInterpDerivative(StartLocation, StartDerivative, TargetLocation, TargetDerivative, LerpRatio);
+	FVector NewVelocity = NewDerivative / VelocityToDerivative;
+	MovementComponent->SetVelocity(NewVelocity);
+	
 	FQuat TargetRotation = ServerState.Transform.GetRotation();
 	FQuat StartRotation = ClientStartTransform.GetRotation();
 
