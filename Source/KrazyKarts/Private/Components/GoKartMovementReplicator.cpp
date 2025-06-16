@@ -200,13 +200,26 @@ float UGoKartMovementReplicator::VelocityToDerivative()
 void UGoKartMovementReplicator::Server_SendMove_Implementation(FGoKartMove Move)
 {
 	if (!MovementComponent) return;
-	
+
+	ClientSimulatedTime += Move.DeltaTime;
 	MovementComponent->SimulateMove(Move);
 	UpdateServerState(Move);
 }
 
 bool UGoKartMovementReplicator::Server_SendMove_Validate(FGoKartMove Move)
 {
-	return true; // TODO: Better Validation
+	float ProposedTime = ClientSimulatedTime + Move.DeltaTime;
+	bool ClientNotRunningAhead = ProposedTime < GetWorld()->TimeSeconds;
+	if (!ClientNotRunningAhead)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Client running too fast"));
+		return false;
+	}
+	if (!Move.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Move is invalid"));
+		return false;
+	}
+	return true;
 }
 
