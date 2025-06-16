@@ -19,10 +19,10 @@ class KRAZYKARTS_API AGoKart : public APawn
 public:
 	AGoKart();
 
-	UPROPERTY(VisibleAnywhere, Category = "Movement")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	UGoKartMovementComponent* MovementComponent;
 
-	UPROPERTY(VisibleAnywhere, Category = "Replication")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Replication")
 	UGoKartMovementReplicator* MovementReplicator;
 
 protected:

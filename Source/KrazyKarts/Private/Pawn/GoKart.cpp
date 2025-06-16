@@ -22,7 +22,8 @@ void AGoKart::BeginPlay()
 
 	if (HasAuthority())
 	{
-		SetReplicateMovement(true);		
+		SetReplicateMovement(true);
+		SetNetUpdateFrequency(1);
 	}
 	
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
